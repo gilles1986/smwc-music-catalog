@@ -105,3 +105,24 @@ publishes under its own name without an edit.
 The `latest` release is created by the first run that finds it missing. Until
 that has happened there is nothing at the download links above; start it from
 **Actions → Update catalog → Run workflow**, or wait for the schedule.
+
+## Licence, and where the data comes from
+
+The **software** here — `tools/`, `vendor/`, the workflow — is MIT licensed;
+see [`LICENSE`](LICENSE).
+
+The **catalog is not.** `catalog/smwc_catalog.json` is metadata from
+[SMWCentral](https://www.smwcentral.net/?p=section&s=smwmusic): titles, tags,
+ratings, download counts, and descriptions written by the people who uploaded
+the music. Those rights belong to SMWCentral and to the individual authors,
+not to this repository, and nothing here grants you anything in respect of
+them. No audio is redistributed — the catalog holds links back to SMWCentral,
+which is where downloads happen.
+
+It is republished for one reason: without it, every installation of the player
+walks roughly 200 pages of SMWCentral's API to learn what music exists. One
+daily request in place of that is less load on their servers, not more.
+
+If SMWCentral would rather this did not exist, say so in an issue and it comes
+down.
+
