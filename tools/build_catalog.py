@@ -14,8 +14,10 @@ Three things about this script are deliberate:
 * **The file it writes is one entry per line.** It is still ordinary JSON —
   the player reads it unchanged — but a day's update shows up in ``git diff``
   as the handful of lines it really is, instead of one 6 MB line.
-* **Nothing is written when nothing changed.** No commit, no release upload,
-  no version churn on a quiet day.
+* **Nothing is written when nothing changed.** No commit and no new checksum
+  on a quiet day. The artifact is still packaged, so the caller always has
+  something to publish — the first run finds nothing new and still has to
+  produce the download that does not exist yet.
 
 ``raw_description`` is dropped on write. SMWCentral sends both a cleaned and a
 raw description; they are character-identical for half the catalog, together
@@ -264,11 +266,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     if changed:
         write(args.catalog, text)
         print(f"wrote {args.catalog} ({args.catalog.stat().st_size / 1e6:.2f} MB)")
-    elif not args.no_fetch:
+    else:
         print("nothing changed")
-        report("changed", "false")
-        return 0
 
+    # Packaged even on a quiet day, which costs a second and means a caller
+    # always has something to publish: the very first run has an unchanged
+    # catalog and still has to produce the download that does not exist yet.
     manifest = artifacts(args.catalog, args.out, len(entries), args.repo)
     print(
         f"artifact: {manifest['size_bytes'] / 1e6:.2f} MB gzipped · "

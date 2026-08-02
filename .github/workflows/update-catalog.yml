@@ -52,17 +52,34 @@ jobs:
           git push
 
       - name: Publish the download
-        if: steps.build.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          CHANGED: ${{ steps.build.outputs.changed }}
         run: |
+          publish=""
           # One release, re-used. A release per day would leave 365 dead
           # downloads a year and no obvious "current" one.
-          gh release view latest >/dev/null 2>&1 || gh release create latest \
-            --title "Current catalog" \
-            --notes "Rebuilt daily. \`manifest.json\` describes the artifact beside it."
-          gh release upload latest \
-            dist/smwc-catalog.json.gz dist/manifest.json --clobber
+          if ! gh release view latest >/dev/null 2>&1; then
+            gh release create latest \
+              --title "Current catalog" \
+              --notes "Rebuilt daily. \`manifest.json\` beside it describes the artifact: size, entry count and the SHA-256 to check after downloading."
+            publish="the release did not exist yet"
+          fi
+          if [ "$CHANGED" = "true" ]; then
+            publish="the catalog changed"
+          fi
+          # A run started by hand publishes either way — that is how somebody
+          # asks for the current file to be put up, changed or not.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            publish="asked for by hand"
+          fi
+          if [ -n "$publish" ]; then
+            echo "publishing: $publish"
+            gh release upload latest \
+              dist/smwc-catalog.json.gz dist/manifest.json --clobber
+          else
+            echo "nothing to publish"
+          fi
 
       - name: Summary
         run: |

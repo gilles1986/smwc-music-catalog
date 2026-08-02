@@ -12,8 +12,8 @@ answer.
 
 | | |
 |---|---|
-| Catalog | <https://github.com/OWNER/REPO/releases/latest/download/smwc-catalog.json.gz> |
-| Manifest | <https://github.com/OWNER/REPO/releases/latest/download/manifest.json> |
+| Catalog | <https://github.com/gilles1986/smwc-music-catalog/releases/latest/download/smwc-catalog.json.gz> |
+| Manifest | <https://github.com/gilles1986/smwc-music-catalog/releases/latest/download/manifest.json> |
 
 Fetch the manifest first — it is small, and it says whether a download is
 worth doing:
@@ -22,7 +22,7 @@ worth doing:
 {
   "schema_version": 1,
   "catalog_version": "2026-08-02",
-  "url": "https://github.com/OWNER/REPO/releases/latest/download/smwc-catalog.json.gz",
+  "url": "https://github.com/gilles1986/smwc-music-catalog/releases/latest/download/smwc-catalog.json.gz",
   "mirrors": [],
   "size_bytes": 1343488,
   "sha256": "…",
@@ -77,8 +77,9 @@ python tools/build_catalog.py --full          # walk every page (rarely needed)
 python tools/build_catalog.py --no-fetch      # repackage, ask nobody
 ```
 
-Nothing is written when nothing changed — no commit, no upload, no new
-checksum on a quiet day.
+Nothing is written when nothing changed — no commit and no new checksum on a
+quiet day. The artifact is packaged either way, so there is always something to
+publish; the workflow decides whether it needs to.
 
 `vendor/music_api.py` is a copy of the player's own API client, so the catalog
 is parsed by the same code that reads it. When that file changes in the
@@ -97,19 +98,10 @@ days without repository activity (a day with new songs commits, which counts),
 and the job asks SMWCentral for one page a day with a delay between requests
 and a User-Agent that says who it is.
 
-## Publishing this repository
-
 The workflow needs nothing but the repository itself — no secrets, no tokens.
-`GITHUB_REPOSITORY` supplies the download URL in the manifest, so only this
-README carries the placeholder:
+The download URL in the manifest is built from `GITHUB_REPOSITORY`, so a fork
+publishes under its own name without an edit.
 
-```bash
-gh repo create OWNER/REPO --public --source=. --remote=origin
-sed -i 's|OWNER/REPO|<owner>/<name>|g' README.md
-git add -A && git commit -m "SMWC music catalog, updated daily"
-git push -u origin main
-```
-
-Then start the workflow once by hand (Actions → *Update catalog* → *Run
-workflow*) to create the `latest` release. Everything after that is the
-schedule.
+The `latest` release is created by the first run that finds it missing. Until
+that has happened there is nothing at the download links above; start it from
+**Actions → Update catalog → Run workflow**, or wait for the schedule.
