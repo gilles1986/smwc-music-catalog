@@ -1,0 +1,12 @@
+version: 2
+
+# The workflow pins actions by major version, which still leaves the pinned
+# tag moving under it. This opens a pull request when one is superseded, so an
+# unmaintained action is visible rather than silently ancient.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci"

@@ -1,0 +1,75 @@
+name: Update catalog
+
+# 04:17 UTC: off the hour, because everybody schedules on the hour and GitHub
+# queues those runs. Scheduled workflows on a public repository are switched
+# off after 60 days without repository activity — a day that brings new songs
+# commits and counts as activity, and a manual run resets the clock too.
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Walk every page instead of stopping at the first known one"
+        type: boolean
+        default: false
+
+# The job commits the updated catalog and uploads the release asset.
+permissions:
+  contents: write
+
+# One at a time. Two runs updating the same file would race over the commit,
+# and the loser would push a catalog built from a stale copy.
+concurrency:
+  group: catalog
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests
+
+      - name: Update the catalog
+        id: build
+        run: >
+          python tools/build_catalog.py
+          ${{ inputs.full && '--full' || '' }}
+
+      - name: Commit the change
+        if: steps.build.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add catalog/smwc_catalog.json
+          git commit -m "catalog: ${{ steps.build.outputs.added }} new entries ($(date -u +%Y-%m-%d))"
+          git push
+
+      - name: Publish the download
+        if: steps.build.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # One release, re-used. A release per day would leave 365 dead
+          # downloads a year and no obvious "current" one.
+          gh release view latest >/dev/null 2>&1 || gh release create latest \
+            --title "Current catalog" \
+            --notes "Rebuilt daily. \`manifest.json\` describes the artifact beside it."
+          gh release upload latest \
+            dist/smwc-catalog.json.gz dist/manifest.json --clobber
+
+      - name: Summary
+        run: |
+          {
+            echo "### SMWC catalog"
+            echo
+            echo "- entries: ${{ steps.build.outputs.entries }}"
+            echo "- new today: ${{ steps.build.outputs.added || 0 }}"
+            echo "- published: ${{ steps.build.outputs.changed }}"
+          } >> "$GITHUB_STEP_SUMMARY"

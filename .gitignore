@@ -1,0 +1,6 @@
+# Build output: the artifact is published as a release asset, not committed.
+dist/
+
+__pycache__/
+*.pyc
+.venv/

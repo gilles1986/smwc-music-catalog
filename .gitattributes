@@ -1,0 +1,11 @@
+# Line endings are decided here, not by whoever clones. The catalog is one
+# line per entry and its diff is the point of the format — a checkout that
+# rewrote them to CRLF on Windows would rewrite all 9,700 lines on the first
+# commit and change the published checksum for nothing.
+* text=auto eol=lf
+
+# Built by a script, not written by hand: GitHub then collapses it in diffs
+# and leaves it out of the language statistics.
+catalog/smwc_catalog.json linguist-generated=true
+
+*.gz binary
